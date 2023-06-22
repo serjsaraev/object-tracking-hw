@@ -1,6 +1,7 @@
 import numpy as np
 from fastapi import FastAPI, WebSocket
 from track_3 import track_data, country_balls_amount
+from metric import Metric
 from sort import Sort
 import asyncio
 import glob
@@ -9,6 +10,7 @@ app = FastAPI(title='Tracker assignment')
 imgs = glob.glob('imgs/*')
 country_balls = [{'cb_id': x, 'img': imgs[x % len(imgs)]} for x in range(country_balls_amount)]
 sort_tracker = Sort(max_age=5, min_hits=1, iou_threshold=0.3)
+acc_metric = Metric()
 print('Started')
 
 
@@ -27,12 +29,18 @@ def tracker_soft(el):
     вашего трекера, использовать его в алгоритме трекера запрещено
     - запрещается присваивать один и тот же track_id разным объектам на одном фрейме
     """
+    det_list = []
 
-    dets = list([[*det['bounding_box'],  i] for i, det in enumerate(el['data']) if det['bounding_box']])
-    if dets:
-        tracked_dets = sort_tracker.update(np.array(dets))
-        for track in tracked_dets:
+    for idx, detect in enumerate(el['data']):
+        if detect["bounding_box"]:
+            dt = [*detect["bounding_box"], idx]
+            det_list.append(dt)
+
+    if det_list:
+        tracks_det = sort_tracker.update(np.array(det_list))
+        for track in tracks_det:
             el['data'][int(track[-1])]['track_id'] = int(track[-1])
+
     return el
 
 
@@ -75,5 +83,7 @@ async def websocket_endpoint(websocket: WebSocket):
         # el = tracker_strong(el)
         # отправка информации по фрейму
         await websocket.send_json(el)
-    sort_tracker.clear()
+        acc_metric.calculate_metric(el, len(track_data))
+    sort_tracker.clean()
+    acc_metric.clean()
     print('Bye..')

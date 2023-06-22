@@ -213,7 +213,6 @@ class Sort(object):
         # create and initialise new trackers for unmatched detections
         for i in unmatched_dets:
             trk = KalmanBoxTracker(dets[i, :-1], dets[i, -1])
-            print(dets[i, -1])
             self.trackers.append(trk)
         i = len(self.trackers)
         for trk in reversed(self.trackers):
@@ -228,7 +227,7 @@ class Sort(object):
             return np.concatenate(ret)
         return np.empty((0, 5))
 
-    def clear(self):
+    def clean(self):
         self.trackers = []
         self.frame_count = 0
         KalmanBoxTracker.count = 0

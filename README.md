@@ -11,7 +11,7 @@ pip install -r requirements.txt
 
 или командой в терминале
 ```
-python3 -m uvicorn fastapi_server:app --reload --port 8001 
+python3 -m uvicorn fastapi_server:app --reload --port 8002 
 ```
 
 ### Постановка задачи
